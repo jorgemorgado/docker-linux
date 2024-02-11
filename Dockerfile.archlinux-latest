@@ -1,0 +1,47 @@
+# See https://hub.docker.com/
+
+FROM archlinux:latest
+
+ARG username
+ARG password
+ARG uid
+ARG gid
+
+# System upgrade
+RUN pacman -Syu --noconfirm
+
+# Arch Linux packages
+RUN pacman -Sy --noconfirm \
+    git \
+    jq \
+    net-tools \
+    openssh \
+    sudo \
+    systemd \
+    systemd-sysvcompat \
+    unzip \
+    vim \
+    wget
+
+# SSH server configuration
+RUN /usr/bin/ssh-keygen -A
+
+# User/group
+RUN groupadd -g ${gid} ${username} && \
+    useradd ${username} \
+    --shell /usr/bin/bash \
+    -d /home/${username} \
+    -u ${uid} -g ${gid} \
+    -G wheel && \
+    echo ${username}:${password} | chpasswd && \
+    sed -i 's/# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/g' /etc/sudoers && \
+    mkdir /run/sshd
+
+COPY docker-entrypoint.sh /
+
+# systemctl enable sshd
+# systemctl start sshd
+# systemctl status sshd
+EXPOSE 22
+
+ENTRYPOINT ["/docker-entrypoint.sh"]

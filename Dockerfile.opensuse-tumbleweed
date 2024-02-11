@@ -1,0 +1,47 @@
+# See https://hub.docker.com/
+
+# FROM docker.io/opensuse/tumbleweed:latest
+FROM opensuse/tumbleweed:latest
+
+ARG username
+ARG password
+ARG uid
+ARG gid
+
+ADD ./install /opt/install
+ADD ./cacerts/* /usr/local/share/ca-certificates/
+
+# Opensuse packages
+RUN zypper install -y \
+    net-tools net-tools-deprecated \
+    openssh \
+    sudo \
+    system-group-wheel \
+    systemd systemd-sysvinit \
+    vim \
+    wget
+
+# User/group
+RUN groupadd -g ${gid} ${username} && \
+    useradd ${username} \
+    --shell /usr/bin/bash \
+    -d /home/${username} \
+    -u ${uid} -g ${gid} \
+    -G wheel && \
+    echo ${username}:${password} | chpasswd && \
+    mkdir /run/sshd
+
+# Quick hack to allow members of group wheel to execute any command
+# Same as running visudo (as root) and uncomment the wheel group line
+#RUN echo "%wheel ALL=(ALL:ALL) ALL" | sudo EDITOR="tee -a" visudo
+COPY ./install/sudoers /etc
+RUN chmod 0440 /etc/sudoers && chown root:root /etc/sudoers
+
+COPY docker-entrypoint.sh /
+
+# systemctl enable sshd
+# systemctl start sshd
+# systemctl status sshd
+EXPOSE 22
+
+ENTRYPOINT ["/docker-entrypoint.sh"]

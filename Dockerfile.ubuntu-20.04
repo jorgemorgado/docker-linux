@@ -1,0 +1,68 @@
+# See https://hub.docker.com/
+
+# FROM docker.io/ubuntu:20.04
+FROM ubuntu:20.04
+
+ARG username
+ARG password
+ARG uid
+ARG gid
+
+ADD ./install /opt/install
+ADD ./cacerts/* /usr/local/share/ca-certificates/
+
+# Ubuntu and pip packages
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    bsdmainutils \
+    ca-certificates \
+    curl \
+    dos2unix \
+    git \
+    gnupg \
+    htop \
+    jq \
+    less \
+    lsb-release \
+    man-db manpages-dev manpages-posix manpages-posix-dev \
+    net-tools \
+    pip \
+    ssh \
+    sudo \
+    systemd systemd-sysv dbus dbus-user-session \
+    unzip \
+    vim \
+    && \
+    pip install -r /opt/install/requirements-ubuntu.txt
+
+# Docker client
+RUN mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+    $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce-cli
+
+# Update certs and cleanup
+RUN update-ca-certificates && \
+    apt-get clean autoclean && \
+    apt-get autoremove --yes && \
+    rm -rf /var/lib/{apt,dpkg,cache,log} /tmp/* /var/tmp/*
+
+# User/group
+RUN useradd ${username} \
+    --shell /usr/bin/bash \
+    -d /home/${username} \
+    -u ${uid} -g ${gid} \
+    -G sudo && \
+    echo ${username}:${password} | chpasswd && \
+    mkdir /run/sshd
+
+COPY docker-entrypoint.sh /
+
+# systemctl enable sshd
+# systemctl start sshd
+# systemctl status sshd
+EXPOSE 22
+
+ENTRYPOINT ["/docker-entrypoint.sh"]

@@ -1,0 +1,4 @@
+zc.lockfile
+requests
+ansible-core>=2.15.5
+ansible>=8.5.0

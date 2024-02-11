@@ -1,0 +1,3 @@
+zc.lockfile
+requests
+ansible

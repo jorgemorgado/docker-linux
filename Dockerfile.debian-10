@@ -1,0 +1,55 @@
+# See https://hub.docker.com/
+
+FROM debian:10
+
+ARG username
+ARG password
+ARG uid
+ARG gid
+
+ADD ./install /opt/install
+ADD ./cacerts/* /usr/local/share/ca-certificates/
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    bsdmainutils \
+    ca-certificates \
+    curl \
+    dos2unix \
+    git \
+    gnupg \
+    htop \
+    jq \
+    less \
+    lsb-release \
+    man-db manpages manpages-dev \
+    net-tools \
+    python3 \
+    python3-pip \
+    python3-zc.lockfile \
+    python3-requests \
+    python3-setuptools \
+    ssh \
+    sudo \
+    systemd systemd-sysv dbus dbus-user-session \
+    unzip \
+    vim
+    # && \
+    # pip3 install -r /opt/install/requirements-debian.txt
+
+# User/group
+RUN useradd ${username} \
+    --shell /usr/bin/bash \
+    -d /home/${username} \
+    -u ${uid} -g ${gid} \
+    -G sudo && \
+    echo ${username}:${password} | chpasswd && \
+    mkdir /run/sshd
+
+COPY docker-entrypoint.sh /
+
+# systemctl start sshd
+# systemctl status sshd
+EXPOSE 22
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
