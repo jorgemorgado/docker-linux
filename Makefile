@@ -116,8 +116,8 @@ enter: # Access (enter) a container
 		"$(CT_NAME)" /bin/bash
 
 clean: # Stop and remove a container
-	@docker stop "${CT_NAME}" && \
-	 docker rm "${CT_NAME}"
+	@docker stop "${CT_NAME}"; \
+	 docker image rm "${IMG_NAME}"
 
 cleanimage: # Remove an image
 	@docker image rm "$(IMG_NAME)"
