@@ -1,0 +1,49 @@
+# See https://hub.docker.com/
+
+FROM alpine:latest
+
+ARG username
+ARG password
+ARG uid
+ARG gid
+
+ADD ./install /opt/install
+ADD ./cacerts/* /usr/local/share/ca-certificates/
+
+RUN apk update && \
+    apk add --no-cache \
+    bash \
+    ca-certificates \
+    curl \
+    dos2unix \
+    git \
+    gnupg \
+    less \
+    net-tools \
+    openrc \
+    openssh \
+    sudo \
+    unzip \
+    vim
+
+# SSH server configuration
+RUN /usr/bin/ssh-keygen -A; \
+    mkdir -p /run/openrc; \
+    touch /run/openrc/softlevel
+
+# User/group
+RUN adduser ${username} \
+    -D -H \
+    -s /bin/bash \
+    -h /home/${username} \
+    -u ${uid} -G wheel && \
+    echo ${username}:${password} | chpasswd && \
+    sed -i 's/# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/g' /etc/sudoers && \
+    mkdir /run/sshd
+
+# rc-update add sshd default
+# rc-service sshd start
+# rc-status
+EXPOSE 22
+
+CMD ["/bin/bash"]

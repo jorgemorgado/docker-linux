@@ -1,0 +1,51 @@
+# See https://hub.docker.com/
+
+FROM redhat/ubi8-minimal
+
+ARG username
+ARG password
+ARG uid
+ARG gid
+
+ADD ./install /opt/install
+ADD ./cacerts/* /usr/local/share/ca-certificates/
+ADD ./etc /etc
+
+# System upgrade
+RUN microdnf upgrade -y --refresh --best --nodocs --noplugins
+
+# RHEL8 packages
+RUN microdnf install -y --nodocs \
+    bind-utils \
+    findutils \
+    less \
+    net-tools \
+    openssh openssh-server \
+    procps \
+    sudo \
+    tar \
+    unzip \
+    vim \
+    && \
+    microdnf clean all
+
+# SSH server configuration
+RUN /usr/bin/ssh-keygen -A
+
+# User/group
+RUN useradd ${username} \
+    --shell /usr/bin/bash \
+    -d /home/${username} \
+    -u ${uid} -g ${gid} \
+    -G wheel && \
+    echo ${username}:${password} | chpasswd && \
+    mkdir /run/sshd
+
+COPY docker-entrypoint.sh /
+
+# systemctl enable sshd
+# systemctl start sshd
+# systemctl status sshd
+EXPOSE 22
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
