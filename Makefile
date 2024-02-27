@@ -11,6 +11,9 @@ TAG		?= generic
 # 	make build; make run; make enter; make stop
 # 	make build TAG=test; make run TAG=test; make enter TAG=test; make stop TAG=test
 #
+# UBI8 (RHEL) mini
+# 	make build NAME=ubi8 VER=mini; make run NAME=ubi8 VER=mini; make enter NAME=ubi8 VER=mini; make stop NAME=ubi8
+#
 # CentOS
 # 	make build NAME=centos VER=8.x; make run NAME=centos VER=8.x; make enter NAME=centos VER=8.x; make stop NAME=centos
 #
@@ -31,6 +34,10 @@ TAG		?= generic
 #
 # Opensuse
 #	make build NAME=opensuse VER=tumbleweed; make run NAME=opensuse; make enter NAME=opensuse; make stop NAME=opensuse
+#
+# Alpine
+# 	make build NAME=alpine VER=latest; make run NAME=alpine VER=latest; make enter NAME=alpine VER=latest; make stop NAME=alpine
+#   make root NAME=alpine VER=latest
 
 LXC_NAME	?= lxc-$(NAME)
 DOCKERFILE	?= Dockerfile.$(NAME)-$(VER)
